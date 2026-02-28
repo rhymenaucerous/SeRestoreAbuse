@@ -15,8 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SeRestoreAbuse.cpp">
+    <ClCompile Include="SeRestoreAbuse.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SeRestoreAbuse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
