@@ -2,7 +2,7 @@
 
     @file      SeRestoreAbuse.c
     @author    @rhymenaucerous
-	@brief     This is a modified version of the original SeRestoreAbuse PoC
+        @brief     This is a modified version of the original SeRestoreAbuse PoC
                by @xct_de. The original code can be found here:
                https://github.com/xct/SeRestoreAbuse
 
@@ -22,7 +22,7 @@
 
 // ############################## Enums ##############################
 
-#define SECLOGON_REG_KEY L"SYSTEM\\CurrentControlSet\\Services\\SecLogon"
+#define SECLOGON_REG_KEY      L"SYSTEM\\CurrentControlSet\\Services\\SecLogon"
 #define SECLOGON_SERVICE_NAME L"Seclogon"
 
 typedef enum
@@ -153,7 +153,7 @@ EXIT:
 } // wmain
 
 static STATUS
-SetRestorePrivilege()
+SetRestorePrivilege ()
 {
     STATUS Status   = STATUS_ERR_GENERIC;
     BOOL   bStatus  = FALSE;
@@ -190,7 +190,7 @@ EXIT:
 static STATUS
 SetPrivilege (HANDLE hToken, PWCHAR pPrivilegeName, BOOL bEnablePrivilege)
 {
-    STATUS      Status  = STATUS_ERR_GENERIC;
+    STATUS           Status  = STATUS_ERR_GENERIC;
     TOKEN_PRIVILEGES tp      = { 0 };
     LUID             luid    = { 0 };
     BOOL             bStatus = FALSE;
@@ -323,7 +323,7 @@ EXIT:
 } // ResetRegKey
 
 static STATUS
-StartSecLogonService()
+StartSecLogonService ()
 {
     STATUS    Status       = STATUS_ERR_GENERIC;
     SC_HANDLE schSCManager = NULL;
@@ -365,5 +365,4 @@ EXIT:
     return Status;
 } // StartSecLogonService
 
-
-//End of file
+// End of file
