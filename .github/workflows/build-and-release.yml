@@ -23,12 +23,6 @@ jobs:
       - name: Build Solution
         run: msbuild.exe SeRestoreAbuse.sln /p:Configuration=Release /p:Platform=x64
 
-      - name: Upload Executable Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-executables
-          path: x64/Release/SeRestoreAbuse.exe
-
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
