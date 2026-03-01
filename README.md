@@ -42,11 +42,11 @@ This is a modified version of @xct_de's SecLogon exploit (https://github.com/xct
 
 ## Prerequisites
 
-- The running user must hold `SeRestorePrivilege`. Verify with:
+The running user must hold `SeRestorePrivilege`. Verify with:
 ```cmd
 whoami /priv
 ```
-- The `seclogon` service must not be disabled (it defaults to **Manual** start on Windows).
+The `seclogon` service must not be disabled (it defaults to **Manual** start on Windows).
 
 <br>
 

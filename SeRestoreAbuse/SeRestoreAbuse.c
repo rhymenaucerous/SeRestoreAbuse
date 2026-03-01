@@ -256,13 +256,17 @@ SetSelfAsRegKey ()
         goto EXIT;
     }
 
-    lStatus = RegSetValueExW(hKey,
-                             SECLOGON_IMAGE_PATH_NAME,
-                             0,      // Reserved
-                             REG_SZ, // Type
-                             (PBYTE)szExePath,
-                             (wcslen(szExePath) + 1)
-                                 * sizeof(WCHAR)); // +1 for null terminator
+    lStatus = RegSetValueExW(
+        hKey,
+        SECLOGON_IMAGE_PATH_NAME,
+        0,      // Reserved
+        REG_SZ, // Type
+        (PBYTE)szExePath,
+        (DWORD)(wcslen(szExePath) + 1)
+            * sizeof(
+                WCHAR)); // +1 for null terminator, coversion to DWORD will not
+                         // overflow since MAX_PATH is 260 and sizeof(WCHAR) is
+                         // 2, so max value is 522 which is less than MAXDWORD
     if (ERROR_SUCCESS != lStatus)
     {
         PRINT_ERROR("RegSetValueExW failed");
@@ -308,13 +312,17 @@ ResetRegKey ()
         goto EXIT;
     }
 
-    lStatus = RegSetValueExW(hKey,
-                             SECLOGON_IMAGE_PATH_NAME,
-                             0,             // Reserved
-                             REG_EXPAND_SZ, // Type
-                             (PBYTE)SECLOGON_IMAGE_PATH,
-                             (wcslen(SECLOGON_IMAGE_PATH) + 1)
-                                 * sizeof(WCHAR)); // +1 for null terminator
+    lStatus = RegSetValueExW(
+        hKey,
+        SECLOGON_IMAGE_PATH_NAME,
+        0,             // Reserved
+        REG_EXPAND_SZ, // Type
+        (PBYTE)SECLOGON_IMAGE_PATH,
+        (DWORD)(wcslen(SECLOGON_IMAGE_PATH) + 1)
+            * sizeof(WCHAR)); // +1 for null terminator, coversion to DWORD will
+                              // not overflow since the macro value is 80 and
+                              // sizeof(WCHAR) is 2, so max value is 162 which
+                              // is less than MAXDWORD.
     if (ERROR_SUCCESS != lStatus)
     {
         PRINT_ERROR("RegSetValueExW failed");
