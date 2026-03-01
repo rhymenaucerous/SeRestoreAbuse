@@ -2,7 +2,7 @@
 
     @file      SeRestoreAbuse.c
     @author    @rhymenaucerous
-        @brief     This is a modified version of the original SeRestoreAbuse PoC
+    @brief     This is a modified version of the original SeRestoreAbuse PoC
                by @xct_de. The original code can be found here:
                https://github.com/xct/SeRestoreAbuse
 
