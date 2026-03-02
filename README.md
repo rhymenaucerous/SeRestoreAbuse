@@ -62,6 +62,14 @@ On success, a local user `attacker` with password `password123` is added to the 
 
 <br>
 
+## Build
+
+Open `SeRestoreAbuse.sln` in Visual Studio and build the **Release** or **Debug** configuration for **x64**. The Release build uses `/MT` (static CRT), producing a standalone executable with no Visual Studio DLL dependencies.
+
+To customize the commands run as SYSTEM, edit `COMMAND_1` and `COMMAND_2` at the top of `SeRestoreAbuse.c` before building.
+
+<br>
+
 ## Original Implementation
 
 ### Description
@@ -115,14 +123,6 @@ The current implementation does a couple of things differently.
 1. On success, the `ImagePath` will be reset follow command completion. This will allow `seclogon` to run normally after the program is done.
 1. The service is started using a Win32 API call to CreateProcessWithLogonW(), which triggers the seclogon service to start if it hasn't already.
 1. The program does not take command line arguments. It will create a user, `attacker` with a password, `password123` regardless of command line arguments used. These commands are run as SYSTEM and can be customized by modifying `COMMAND_1` and `COMMAND_2` at the top of `SeRestoreAbuse.c`.
-
-<br>
-
-## Build
-
-Open `SeRestoreAbuse.sln` in Visual Studio and build the **Release** or **Debug** configuration for **x64**. The Release build uses `/MT` (static CRT), producing a standalone executable with no Visual Studio DLL dependencies.
-
-To customize the commands run as SYSTEM, edit `COMMAND_1` and `COMMAND_2` at the top of `SeRestoreAbuse.c` before building.
 
 <br>
 
